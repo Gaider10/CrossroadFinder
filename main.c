@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "fortressgenerator/FortressGenerator.h"
+#include "fortressgenerator/util/Inputs.h"
 
 typedef enum {
     DOUBLE = 0,
@@ -224,6 +225,7 @@ typedef struct {
     int salt;
     CrossroadShape crossroadShape;
     int maxY;
+    int searchRadius;
 } InputData;
 
 void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, int regionX, int regionZ) {
@@ -287,97 +289,47 @@ void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, i
     }
 }
 
+int getInputData(InputData *inputData) {
+    // seed
+    if(!getLongNormal("numeric world seed", &inputData->structureSeed)) {
+        return 0;
+    }
+
+    // salt
+    if(!getIntNormal("fortress salt", &inputData->salt, 1, FORTRESS_SALT, INT_MIN, INT_MAX)) {
+        return 0;
+    }
+
+    // shape
+    if(!getIntEnum("crossroad shape", (int*)&inputData->crossroadShape, SHAPE_NAMES, SHAPE_COUNT)) {
+        return 0;
+    }
+
+    // maxY
+    if(!getIntNormal("maxY", &inputData->maxY, 1, 255, 48, INT_MAX)) {
+        return 0;
+    }
+    
+    // radius
+    if(!getIntNormal("search radius", &inputData->searchRadius, 0, 0, 0, 30000000)) {
+        return 0;
+    }
+
+    return 1;
+}
+
 int main() {
     InputData inputData;
-    char input[64];
-    char *ptr;
-    // seed
-    printf("Enter the numeric world seed:\n");
-    fgets(input, 64, stdin);
-    if(input[0] == '\n') {
-        printf("Entered seed is not valid\n");
-        return 0;
-    }
-    inputData.structureSeed = strtoll(input, &ptr, 10);
-    if(*ptr != '\n') {
-        printf("Entered seed is not valid\n");
-        return 0;
-    }
-    printf("Using seed %lli\n\n", inputData.structureSeed);
-    // salt
-    printf("Enter fortress salt (leave empty for the vanilla value):\n");
-    fgets(input, 64, stdin);
-    if(input[0] == '\n') {
-        inputData.salt = FORTRESS_SALT;
-    } else {
-        inputData.salt = strtol(input, &ptr, 10);
-            if(*ptr != '\n') {
-            printf("Entered salt is not valid\n");
-            return 0;
-        }
-    }
-    printf("Using salt %i\n\n", inputData.salt);
-    // shape
-    printf("Enter crossroad shape:\n");
-    for(int i = 0; i < SHAPE_COUNT; i++) {
-        printf("%i - %s\n", i, SHAPE_NAMES[i]);
-    }
-    fgets(input, 64, stdin);
-    if(input[0] == '\n') {
-        printf("Entered shape is not valid\n");
-        return 0;
-    }
-    inputData.crossroadShape = strtol(input, &ptr, 10);
-    if(*ptr != '\n') {
-        printf("Entered shape is not valid\n");
-        return 0;
-    }
-    if(inputData.crossroadShape < 0 || inputData.crossroadShape >= SHAPE_COUNT) {
-        printf("Entered shape is not valid\n");
-        return 0;
-    }
-    printf("Using shape %s\n\n", SHAPE_NAMES[inputData.crossroadShape]);
-    // maxY
-    printf("Enter maxY (leave empty for any value):\n");
-    fgets(input, 64, stdin);
-    if(input[0] == '\n') {
-        inputData.maxY = 255;
-    } else {
-        inputData.maxY = strtol(input, &ptr, 10);
-        if(*ptr != '\n') {
-            printf("Entered maxY is not valid\n");
-            return 0;
-        }
-        if(inputData.maxY < 48) {
-            printf("Entered maxY is not valid (fortresses never generate below y = 48)\n");
-            return 0;
-        }
-    }
-    printf("Using maxY %i\n\n", inputData.maxY);
-    // radius
-    int radius;
-    printf("Enter search radius:\n");
-    fgets(input, 64, stdin);
-    if(input[0] == '\n') {
-        printf("Entered radius is not valid\n");
-        return 0;
-    }
-    radius = strtol(input, &ptr, 10);
-    if(*ptr != '\n') {
-        printf("Entered radius is not valid\n");
-        return 0;
-    }
-    if(radius < 0) {
-        printf("Entered radius is not valid\n");
-        return 0;
-    }
-    printf("Using radius %i\n\n", radius);
 
-    FortressGenerator fortressGenerator;
-    int regionRadius = radius / FORTRESS_SPACING / 16 + 1;
-    for(int regionX = -regionRadius; regionX <= regionRadius; regionX++) {
-        for(int regionZ = -regionRadius; regionZ <= regionRadius; regionZ++) {
-            processRegion(&inputData, &fortressGenerator, regionX, regionZ);
+    if(getInputData(&inputData)) {
+        FortressGenerator fortressGenerator;
+
+        int regionRadius = inputData.searchRadius / FORTRESS_SPACING / 16 + 1;
+
+        for(int regionX = -regionRadius; regionX <= regionRadius; regionX++) {
+            for(int regionZ = -regionRadius; regionZ <= regionRadius; regionZ++) {
+                processRegion(&inputData, &fortressGenerator, regionX, regionZ);
+            }
         }
     }
 
