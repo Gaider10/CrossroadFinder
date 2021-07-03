@@ -226,6 +226,8 @@ typedef struct {
     CrossroadShape crossroadShape;
     int maxY;
     int searchRadius;
+    int searchCenterX;
+    int searchCenterZ;
 } InputData;
 
 void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, int regionX, int regionZ) {
@@ -315,6 +317,15 @@ int getInputData(InputData *inputData) {
         return 0;
     }
 
+    // center
+    if(!getIntNormal("search center X", &inputData->searchCenterX, 1, 0, -30000000, 30000000)) {
+        return 0;
+    }
+    
+    if(!getIntNormal("search center Z", &inputData->searchCenterZ, 1, 0, -30000000, 30000000)) {
+        return 0;
+    }
+
     return 1;
 }
 
@@ -325,9 +336,16 @@ int main() {
         FortressGenerator fortressGenerator;
 
         int regionRadius = inputData.searchRadius / FORTRESS_SPACING / 16 + 1;
+        int regionCenterX = inputData.searchCenterX / FORTRESS_SPACING / 16;
+        int regionCenterZ = inputData.searchCenterZ / FORTRESS_SPACING / 16;
 
-        for(int regionX = -regionRadius; regionX <= regionRadius; regionX++) {
-            for(int regionZ = -regionRadius; regionZ <= regionRadius; regionZ++) {
+        int regionMinX = regionCenterX - regionRadius;
+        int regionMaxX = regionCenterX + regionRadius;
+        int regionMinZ = regionCenterZ - regionRadius;
+        int regionMaxZ = regionCenterZ + regionRadius;
+
+        for(int regionX = regionMinX; regionX <= regionMaxX; regionX++) {
+            for(int regionZ = regionMinZ; regionZ <= regionMaxZ; regionZ++) {
                 processRegion(&inputData, &fortressGenerator, regionX, regionZ);
             }
         }
