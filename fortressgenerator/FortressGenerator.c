@@ -9,15 +9,20 @@
 #include "PieceType.h"
 #include "PieceData.h"
 
-void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, long long structureSeed, int regionX, int regionZ, int salt) {
-    random_setRegionSeed(&(fortressGenerator->random), structureSeed, regionX, regionZ, salt);
-    int chunkX = regionX * FORTRESS_SPACING + random_nextIntNotPow2(&(fortressGenerator->random), FORTRESS_SPACING - FORTRESS_SEPARATION);
-    int chunkZ = regionZ * FORTRESS_SPACING + random_nextIntNotPow2(&(fortressGenerator->random), FORTRESS_SPACING - FORTRESS_SEPARATION);
-    if(random_nextIntNotPow2(&(fortressGenerator->random), 5) < 2) {
-        fortressGenerator_generateForChunk(fortressGenerator, structureSeed, chunkX, chunkZ);
-    } else {
-        fortressGenerator->piecesCount = 0;
+void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, long long structureSeed, int regionX, int regionZ, int salt, Version version) {
+    Random random;
+    random_setRegionSeed(&random, structureSeed, regionX, regionZ, salt);
+    int chunkX = regionX * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
+    int chunkZ = regionZ * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
+    if(version >= v1_18) {
+        random_setCarverSeed(&random, structureSeed, chunkX, chunkZ);
     }
+    if(random_nextIntNotPow2(&random, 5) < 2) {
+        fortressGenerator_generateForChunk(fortressGenerator, structureSeed, chunkX, chunkZ);
+        return;
+    }
+
+    fortressGenerator->piecesCount = 0;
 }
 
 void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, long long structureSeed, int chunkX, int chunkZ) {

@@ -54,7 +54,7 @@ int getIntNormal(char *name, int *result, int useDefault, int defaultValue, int 
     return 1;
 }
 
-int getIntEnum(char *name, int *result, char **elements, int count) {
+int getIntEnum(char *name, int *result, const char *const *elements, int count) {
     printf("Enter %s:\n", name);
 
     for(int i = 0; i < count; i++) {

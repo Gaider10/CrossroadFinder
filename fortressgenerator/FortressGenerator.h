@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/Version.h"
 #include "util/BlockBox.h"
 #include "util/Direction.h"
 #include "util/Random.h"
@@ -30,7 +31,7 @@ typedef struct {
     Random random;
 } FortressGenerator;
 
-void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, long long structureSeed, int regionX, int regionZ, int salt);
+void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, long long structureSeed, int regionX, int regionZ, int salt, Version version);
 
 void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, long long structureSeed, int chunkX, int chunkZ);
 

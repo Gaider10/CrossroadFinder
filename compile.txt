@@ -1,1 +1,1 @@
-gcc -o main -Wall -Werror -Ofast -flto -static -static-libgcc main.c fortressgenerator/FortressGenerator.c fortressgenerator/PieceData.c fortressgenerator/PieceType.c fortressgenerator/util/BlockBox.c fortressgenerator/util/Inputs.c fortressgenerator/util/Math.c fortressgenerator/util/Random.c
+gcc -o main -Wall -Werror -O2 -flto -static -static-libgcc *.c fortressgenerator/*.c fortressgenerator/util/*.c util/*.c

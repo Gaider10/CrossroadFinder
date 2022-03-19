@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "fortressgenerator/FortressGenerator.h"
-#include "fortressgenerator/util/Inputs.h"
+#include "util/Inputs.h"
 
 typedef enum {
     DOUBLE = 0,
@@ -15,7 +15,7 @@ typedef enum {
     QUINT_BLOB = 6
 } CrossroadShape;
 
-char *SHAPE_NAMES[] = {
+const char *SHAPE_NAMES[] = {
     "DOUBLE",
     "TRIPLE_LINE",
     "QUAD_LINE",
@@ -221,6 +221,7 @@ ShapeVariants SHAPES[] = {
 };
 
 typedef struct {
+    Version version;
     long long structureSeed;
     int salt;
     CrossroadShape crossroadShape;
@@ -231,7 +232,7 @@ typedef struct {
 } InputData;
 
 void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, int regionX, int regionZ) {
-    fortressGenerator_generateForRegion(fortressGenerator, inputData->structureSeed, regionX, regionZ, inputData->salt);
+    fortressGenerator_generateForRegion(fortressGenerator, inputData->structureSeed, regionX, regionZ, inputData->salt, inputData->version);
     if(fortressGenerator->piecesCount == 0) return;
 
     BlockBox *crossroadsByHeight[5][5];
@@ -292,6 +293,11 @@ void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, i
 }
 
 int getInputData(InputData *inputData) {
+    // version
+    if(!getIntEnum("closest lower version", (int*)&inputData->version, VERSION_NAMES, VERSION_COUNT)) {
+        return 0;
+    }
+
     // seed
     if(!getLongNormal("numeric world seed", &inputData->structureSeed)) {
         return 0;
