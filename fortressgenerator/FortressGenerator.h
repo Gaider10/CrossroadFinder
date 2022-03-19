@@ -26,27 +26,27 @@ typedef struct {
     int piecesCount;
     
     PieceType lastPieceType;
-    int startX;
-    int startZ;
+    int32_t startX;
+    int32_t startZ;
     Random random;
 } FortressGenerator;
 
-void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, long long structureSeed, int regionX, int regionZ, int salt, Version version);
+void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t regionX, int32_t regionZ, int32_t salt, Version version);
 
-void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, long long structureSeed, int chunkX, int chunkZ);
+void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t chunkX, int32_t chunkZ);
 
 void fortressGenerator_placeJigsaw(FortressGenerator *fortressGenerator, Piece *piece);
 
-void fortressGenerator_generateChildForward(FortressGenerator *fortressGenerator, Piece *piece, int i, int j, int bl);
+void fortressGenerator_generateChildForward(FortressGenerator *fortressGenerator, Piece *piece, int32_t i, int32_t j, bool isCorridor);
 
-void fortressGenerator_generateChildLeft(FortressGenerator *fortressGenerator, Piece *piece, int i, int j, int bl);
+void fortressGenerator_generateChildLeft(FortressGenerator *fortressGenerator, Piece *piece, int32_t i, int32_t j, bool isCorridor);
 
-void fortressGenerator_generateChildRight(FortressGenerator *fortressGenerator, Piece *piece, int i, int j, int bl);
+void fortressGenerator_generateChildRight(FortressGenerator *fortressGenerator, Piece *piece, int32_t i, int32_t j, bool isCorridor);
 
-void fortressGenerator_generateAndAddPiece(FortressGenerator *fortressGenerator, int x, int y, int z, Direction direction, int l, int bl);
+void fortressGenerator_generateAndAddPiece(FortressGenerator *fortressGenerator, int32_t x, int32_t y, int32_t z, Direction direction, int32_t l, bool isCorridor);
 
-Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerator, int x, int y, int z, Direction direction, int length, int isCorridor);
+Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerator, int32_t x, int32_t y, int32_t z, Direction direction, int32_t length, bool isCorridor);
 
-int fortressGenerator_isOkBox(FortressGenerator *fortressGenerator, BlockBox *blockBox);
+bool fortressGenerator_isOkBox(FortressGenerator *fortressGenerator, BlockBox *blockBox);
 
-Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, PieceType pieceType, int x, int y, int z, Direction direction, int length);
+Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, PieceType pieceType, int32_t x, int32_t y, int32_t z, Direction direction, int32_t length);

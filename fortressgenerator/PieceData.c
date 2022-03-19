@@ -20,6 +20,6 @@ const PieceData CASTLE_PIECE_WEIGHTS[CASTLE_PIECE_WEIGHTS_COUNT] = {
     { CORRIDOR_NETHER_WARTS_ROOM, 5, 2, 0, 0 }
 };
 
-int pieceData_isInvalid(PieceData *pieceData) {
+bool pieceData_isInvalid(PieceData *pieceData) {
     return pieceData->maxPlaceCount != 0 && pieceData->placeCount >= pieceData->maxPlaceCount;
 }

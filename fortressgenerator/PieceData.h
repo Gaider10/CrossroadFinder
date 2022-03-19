@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "PieceType.h"
 
 typedef struct {
@@ -16,4 +18,4 @@ typedef struct {
 extern const PieceData BRIDGE_PIECE_WEIGHTS[BRIDGE_PIECE_WEIGHTS_COUNT];
 extern const PieceData CASTLE_PIECE_WEIGHTS[CASTLE_PIECE_WEIGHTS_COUNT];
 
-int pieceData_isInvalid(PieceData *pieceData);
+bool pieceData_isInvalid(PieceData *pieceData);

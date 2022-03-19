@@ -1,7 +1,5 @@
 #pragma once
 
-extern const char *PIECE_TYPE_NAMES[14];
-
 typedef enum {
     BRIDGE = 0,
     BRIDGE_CROSSING = 1,
@@ -18,3 +16,5 @@ typedef enum {
     CORRIDOR_NETHER_WARTS_ROOM = 12,
     BRIDGE_END = 13
 } PieceType;
+
+extern const char *const PIECE_TYPE_NAMES[14];

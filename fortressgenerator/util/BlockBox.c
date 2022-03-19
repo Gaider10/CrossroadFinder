@@ -3,7 +3,7 @@
 #include "Direction.h"
 #include "Math.h"
 
-void blockBox_rotated(BlockBox *blockBox, int x, int y, int z, int offsetX, int offsetY, int offsetZ, int sizeX, int sizeY, int sizeZ, Direction facing) {
+void blockBox_rotated(BlockBox *blockBox, int32_t x, int32_t y, int32_t z, int32_t offsetX, int32_t offsetY, int32_t offsetZ, int32_t sizeX, int32_t sizeY, int32_t sizeZ, Direction facing) {
     switch(facing) {
         case NORTH:
             blockBox->minX = x + offsetX;
@@ -40,7 +40,7 @@ void blockBox_rotated(BlockBox *blockBox, int x, int y, int z, int offsetX, int 
     }
 }
 
-int blockBox_intersects(BlockBox *blockBox, BlockBox *other) {
+bool blockBox_intersects(BlockBox *blockBox, BlockBox *other) {
 	return
 		blockBox->maxX >= other->minX &&
 		blockBox->minX <= other->maxX &&

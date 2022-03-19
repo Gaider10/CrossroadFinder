@@ -9,15 +9,15 @@
 #include "PieceType.h"
 #include "PieceData.h"
 
-void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, long long structureSeed, int regionX, int regionZ, int salt, Version version) {
+void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t regionX, int32_t regionZ, int32_t salt, Version version) {
     Random random;
     random_setRegionSeed(&random, structureSeed, regionX, regionZ, salt);
-    int chunkX = regionX * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
-    int chunkZ = regionZ * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
-    if(version >= v1_18) {
+    int32_t chunkX = regionX * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
+    int32_t chunkZ = regionZ * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
+    if (version >= v1_18) {
         random_setCarverSeed(&random, structureSeed, chunkX, chunkZ);
     }
-    if(random_nextIntNotPow2(&random, 5) < 2) {
+    if (random_nextIntNotPow2(&random, 5) < 2) {
         fortressGenerator_generateForChunk(fortressGenerator, structureSeed, chunkX, chunkZ);
         return;
     }
@@ -25,7 +25,7 @@ void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, l
     fortressGenerator->piecesCount = 0;
 }
 
-void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, long long structureSeed, int chunkX, int chunkZ) {
+void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t chunkX, int32_t chunkZ) {
     // printf("Running for chunk %i %i\n", chunkX, chunkZ);
     fortressGenerator->lastPieceType = -1;
     fortressGenerator->pendingChildrenCount = 0;
@@ -55,7 +55,7 @@ void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, lo
     
     fortressGenerator_placeJigsaw(fortressGenerator, start);
 
-    while(fortressGenerator->pendingChildrenCount != 0) {
+    while (fortressGenerator->pendingChildrenCount != 0) {
         // printf("Placing a piece, %i left\n", fortressGenerator->pendingChildrenCount);
 
         int i = random_nextIntUnknown(&(fortressGenerator->random), fortressGenerator->pendingChildrenCount);
@@ -75,9 +75,9 @@ void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, lo
         blockBox_encompass(&boundingBox, &(fortressGenerator->pieces[i].boundingBox));
     }
 
-    int k = 23 - (boundingBox.maxY - boundingBox.minY + 1);
-    int m = k > 1 ? 48 + random_nextIntUnknown(&(fortressGenerator->random), k) : 48;
-    int offsetY = m - boundingBox.minY;
+    int32_t k = 23 - (boundingBox.maxY - boundingBox.minY + 1);
+    int32_t m = k > 1 ? 48 + random_nextIntUnknown(&(fortressGenerator->random), k) : 48;
+    int32_t offsetY = m - boundingBox.minY;
 
     for (int i = 0; i < fortressGenerator->piecesCount; i++) {
         fortressGenerator->pieces[i].boundingBox.minY += offsetY;
@@ -87,7 +87,7 @@ void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, lo
 
 void fortressGenerator_placeJigsaw(FortressGenerator *fortressGenerator, Piece *piece) {
     int i;
-    switch(piece->pieceType) {
+    switch (piece->pieceType) {
         case BRIDGE:
             fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 3, 0);
             return;
@@ -145,8 +145,8 @@ void fortressGenerator_placeJigsaw(FortressGenerator *fortressGenerator, Piece *
     }
 }
 
-void fortressGenerator_generateChildForward(FortressGenerator *fortressGenerator, Piece *piece, int i, int j, int isCorridor) {
-    switch(piece->facing) {
+void fortressGenerator_generateChildForward(FortressGenerator *fortressGenerator, Piece *piece, int32_t i, int32_t j, bool isCorridor) {
+    switch (piece->facing) {
         case NORTH:
             fortressGenerator_generateAndAddPiece(fortressGenerator, piece->boundingBox.minX + i, piece->boundingBox.minY + j, piece->boundingBox.minZ - 1, piece->facing, piece->length, isCorridor);
             return;
@@ -161,8 +161,8 @@ void fortressGenerator_generateChildForward(FortressGenerator *fortressGenerator
     }
 }
 
-void fortressGenerator_generateChildLeft(FortressGenerator *fortressGenerator, Piece *piece, int i, int j, int isCorridor) {
-    switch(piece->facing) {
+void fortressGenerator_generateChildLeft(FortressGenerator *fortressGenerator, Piece *piece, int32_t i, int32_t j, bool isCorridor) {
+    switch (piece->facing) {
         case NORTH:
         case SOUTH:
             fortressGenerator_generateAndAddPiece(fortressGenerator, piece->boundingBox.minX - 1, piece->boundingBox.minY + i, piece->boundingBox.minZ + j, WEST, piece->length, isCorridor);
@@ -173,8 +173,8 @@ void fortressGenerator_generateChildLeft(FortressGenerator *fortressGenerator, P
     }
 }
 
-void fortressGenerator_generateChildRight(FortressGenerator *fortressGenerator, Piece *piece, int i, int j, int isCorridor) {
-    switch(piece->facing) {
+void fortressGenerator_generateChildRight(FortressGenerator *fortressGenerator, Piece *piece, int32_t i, int32_t j, bool isCorridor) {
+    switch (piece->facing) {
         case NORTH:
         case SOUTH:
             fortressGenerator_generateAndAddPiece(fortressGenerator, piece->boundingBox.maxX + 1, piece->boundingBox.minY + i, piece->boundingBox.minZ + j, EAST, piece->length, isCorridor);
@@ -185,7 +185,7 @@ void fortressGenerator_generateChildRight(FortressGenerator *fortressGenerator, 
     }
 }
 
-void fortressGenerator_generateAndAddPiece(FortressGenerator *fortressGenerator, int x, int y, int z, Direction direction, int length, int isCorridor) {
+void fortressGenerator_generateAndAddPiece(FortressGenerator *fortressGenerator, int32_t x, int32_t y, int32_t z, Direction direction, int32_t length, bool isCorridor) {
     //printf("fortressGenerator_generateAndAddPiece\n");
     if (abs(x - fortressGenerator->startX) <= 112 && abs(z - fortressGenerator->startZ) <= 112) {
         Piece *piece = fortressGenerator_generateRandomPiece(fortressGenerator, x, y, z, direction, length + 1, isCorridor);
@@ -196,13 +196,13 @@ void fortressGenerator_generateAndAddPiece(FortressGenerator *fortressGenerator,
     } else {
         BlockBox blockBox;
         blockBox_rotated(&blockBox, x, y, z, -1, -3, 0, 5, 10, 8, direction);
-        if(fortressGenerator_isOkBox(fortressGenerator, &blockBox)) {
+        if (fortressGenerator_isOkBox(fortressGenerator, &blockBox)) {
             random_nextInt(&(fortressGenerator->random));
         }
     }
 }
 
-Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerator, int x, int y, int z, Direction direction, int length, int isCorridor) {
+Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerator, int32_t x, int32_t y, int32_t z, Direction direction, int32_t length, bool isCorridor) {
     //printf("fortressGenerator_generateRandomPiece\n");
     PieceData *pieceDataList = fortressGenerator->bridgePieces;
     int *pieceDataCount = &(fortressGenerator->bridgePiecesCount);
@@ -214,19 +214,19 @@ Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerato
     int hasPiecesLeft = 0;
     int totalWeight = 0;
 
-    for(int i = 0; i < *pieceDataCount; i++) {
+    for (int i = 0; i < *pieceDataCount; i++) {
         if (pieceDataList[i].maxPlaceCount > 0 && pieceDataList[i].placeCount < pieceDataList[i].maxPlaceCount) {
             hasPiecesLeft = 1;
         }
         totalWeight += pieceDataList[i].weight;
     }
 
-    if(!hasPiecesLeft) totalWeight = -1;
+    if (!hasPiecesLeft) totalWeight = -1;
     
     // printf(" totalWeight: %i isCorridor: %i length: %i\n", totalWeight, isCorridor, length);
     
-    if(totalWeight > 0 && length <= 30){
-        for(int n = 0; n < 5; n++){
+    if (totalWeight > 0 && length <= 30){
+        for (int n = 0; n < 5; n++){
             int o = random_nextIntUnknown(&(fortressGenerator->random), totalWeight);
 
             //printf("  selected: %i\n", o);
@@ -246,7 +246,7 @@ Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerato
                         if (pieceData_isInvalid(pieceData)) {
                             // printf("Removing %i at index %llu\n", pieceData->pieceType, pieceData - pieceDataList);
                             //printf("Current size is %i\n", *pieceDataCount);
-                            if(pieceData != lastPieceData) {
+                            if (pieceData != lastPieceData) {
                                 memmove(pieceData,
                                         pieceData + 1,
                                         (unsigned long long)lastPieceData - (unsigned long long)pieceData);
@@ -266,7 +266,7 @@ Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerato
 
     Piece *piece = &(fortressGenerator->pieces[fortressGenerator->piecesCount]);
     blockBox_rotated(&(piece->boundingBox), x, y, z, -1, -3, 0, 5, 10, 8, direction);
-    if(fortressGenerator_isOkBox(fortressGenerator, &(piece->boundingBox))) {
+    if (fortressGenerator_isOkBox(fortressGenerator, &(piece->boundingBox))) {
         piece->pieceType = BRIDGE_END;
         piece->facing = direction;
         piece->length = length;
@@ -274,22 +274,24 @@ Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerato
         return piece;
     }
 
-    return 0;
+    return NULL;
 }
 
-int fortressGenerator_isOkBox(FortressGenerator *fortressGenerator, BlockBox *blockBox) {
-    if(blockBox->minY <= 10) return 0;
+bool fortressGenerator_isOkBox(FortressGenerator *fortressGenerator, BlockBox *blockBox) {
+    if (blockBox->minY <= 10) return false;
     // Piece *lastPiece = fortressGenerator->pieces + fortressGenerator->piecesCount - 1;
     // for(Piece *piece = fortressGenerator->pieces; piece <= lastPiece; piece++){
     //     if(blockBox_intersects(&(piece->boundingBox), blockBox)) return 0;
     // }
-    for(Piece *piece = fortressGenerator->pieces + fortressGenerator->piecesCount - 1; piece >= fortressGenerator->pieces; piece--){
-        if(blockBox_intersects(&(piece->boundingBox), blockBox)) return 0;
+    for (Piece *piece = fortressGenerator->pieces + fortressGenerator->piecesCount - 1; piece >= fortressGenerator->pieces; piece--){
+        if (blockBox_intersects(&(piece->boundingBox), blockBox)) {
+            return false;
+        }
     }
-    return 1;
+    return true;
 }
 
-Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, PieceType pieceType, int x, int y, int z, Direction direction, int length) {
+Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, PieceType pieceType, int32_t x, int32_t y, int32_t z, Direction direction, int32_t length) {
     //printf("fortressGenerator_generatePiece for pieceType %i\n", pieceType);
     Piece *piece = &(fortressGenerator->pieces[fortressGenerator->piecesCount]);
     switch (pieceType) {
@@ -336,15 +338,15 @@ Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, Pie
             return 0;
     }
 
-    if(!fortressGenerator_isOkBox(fortressGenerator, &(piece->boundingBox))) {
-        return 0;
+    if (!fortressGenerator_isOkBox(fortressGenerator, &(piece->boundingBox))) {
+        return NULL;
     }
 
     piece->pieceType = pieceType;
     piece->facing = direction;
     piece->length = length;
 
-    if(pieceType == CORRIDOR_RIGHT_TURN || pieceType == CORRIDOR_LEFT_TURN) {
+    if (pieceType == CORRIDOR_RIGHT_TURN || pieceType == CORRIDOR_LEFT_TURN) {
         random_nextInt(&(fortressGenerator->random));
     }
 

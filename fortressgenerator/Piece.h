@@ -8,5 +8,5 @@ typedef struct {
     PieceType pieceType;
     BlockBox boundingBox;
     Direction facing;
-    int length;
+    int32_t length;
 } Piece;

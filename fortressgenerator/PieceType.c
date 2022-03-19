@@ -1,6 +1,6 @@
 #include "PieceType.h"
 
-const char *PIECE_TYPE_NAMES[14] = {
+const char *const PIECE_TYPE_NAMES[14] = {
     "BRIDGE",
     "BRIDGE_CROSSING",
     "BRIDGE_SMALL_CROSSING",

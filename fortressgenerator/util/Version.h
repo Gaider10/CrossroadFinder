@@ -6,4 +6,4 @@ typedef enum {
     VERSION_COUNT = 2
 } Version;
 
-extern const char *VERSION_NAMES[VERSION_COUNT];
+extern const char *const VERSION_NAMES[VERSION_COUNT];
