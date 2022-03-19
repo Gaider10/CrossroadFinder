@@ -9,23 +9,43 @@
 #include "PieceType.h"
 #include "PieceData.h"
 
+int32_t fortressGenerator_getRegionSize(Version version) {
+    if (version < v1_16_1) {
+        return 16;
+    } else {
+        return 27;
+    }
+}
+
 void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t regionX, int32_t regionZ, int32_t salt, Version version) {
     Random random;
-    random_setRegionSeed(&random, structureSeed, regionX, regionZ, salt);
-    int32_t chunkX = regionX * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
-    int32_t chunkZ = regionZ * FORTRESS_SPACING + random_nextIntNotPow2(&random, FORTRESS_SPACING - FORTRESS_SEPARATION);
-    if (version >= v1_18) {
-        random_setCarverSeed(&random, structureSeed, chunkX, chunkZ);
-    }
-    if (random_nextIntNotPow2(&random, 5) < 2) {
-        fortressGenerator_generateForChunk(fortressGenerator, structureSeed, chunkX, chunkZ);
-        return;
+    if (version < v1_16_1) {
+        random_setSeed(&random, (uint64_t)(int64_t)(regionX ^ (regionZ << 4)) ^ structureSeed);
+        random_nextInt(&random);
+        if (random_nextIntNotPow2(&random, 3) == 0) {
+            int32_t chunkX = regionX * 16 + 4 + random_nextIntPow2(&random, 8);
+            int32_t chunkZ = regionZ * 16 + 4 + random_nextIntPow2(&random, 8);
+            fortressGenerator->random = random;
+            fortressGenerator_generateForChunk(fortressGenerator, structureSeed, chunkX, chunkZ, version);
+            return;
+        }
+    } else {
+        random_setRegionSeed(&random, structureSeed, regionX, regionZ, salt);
+        int32_t chunkX = regionX * 27 + random_nextIntNotPow2(&random, 27 - 4);
+        int32_t chunkZ = regionZ * 27 + random_nextIntNotPow2(&random, 27 - 4);
+        if (version >= v1_18) {
+            random_setCarverSeed(&random, structureSeed, chunkX, chunkZ);
+        }
+        if (random_nextIntNotPow2(&random, 5) < 2) {
+            fortressGenerator_generateForChunk(fortressGenerator, structureSeed, chunkX, chunkZ, version);
+            return;
+        }
     }
 
     fortressGenerator->piecesCount = 0;
 }
 
-void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t chunkX, int32_t chunkZ) {
+void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t chunkX, int32_t chunkZ, Version version) {
     // printf("Running for chunk %i %i\n", chunkX, chunkZ);
     fortressGenerator->lastPieceType = -1;
     fortressGenerator->pendingChildrenCount = 0;
@@ -39,7 +59,9 @@ void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, ui
     fortressGenerator->startX = (chunkX << 4) + 2;
     fortressGenerator->startZ = (chunkZ << 4) + 2;
     
-    random_setCarverSeed(&(fortressGenerator->random), structureSeed, chunkX, chunkZ);
+    if (version >= v1_13) {
+        random_setCarverSeed(&(fortressGenerator->random), structureSeed, chunkX, chunkZ);
+    }
 
     Piece *start = &(fortressGenerator->pieces[fortressGenerator->piecesCount]);
     start->pieceType = BRIDGE_CROSSING;
@@ -53,6 +75,8 @@ void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, ui
     start->length = 0;
     fortressGenerator->piecesCount = 1;
     
+    // printf("Placing piece %s at /tp %i ~ %i\n", PIECE_TYPE_NAMES[start->pieceType], start->boundingBox.minX, start->boundingBox.minZ);
+    // printf("Placing children for %s at /tp %i ~ %i\n", PIECE_TYPE_NAMES[start->pieceType], start->boundingBox.minX, start->boundingBox.minZ);
     fortressGenerator_placeJigsaw(fortressGenerator, start);
 
     while (fortressGenerator->pendingChildrenCount != 0) {
@@ -66,7 +90,7 @@ void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, ui
                     (fortressGenerator->pendingChildrenCount - i - 1) * sizeof(Piece*));
         }
         fortressGenerator->pendingChildrenCount--;
-        // printf("Placing %s\n", PIECE_TYPES[piece->pieceType]);
+        // printf("Placing children for %s at /tp %i ~ %i\n", PIECE_TYPE_NAMES[piece->pieceType], piece->boundingBox.minX, piece->boundingBox.minZ);
         fortressGenerator_placeJigsaw(fortressGenerator, piece);
     }
 
@@ -89,38 +113,38 @@ void fortressGenerator_placeJigsaw(FortressGenerator *fortressGenerator, Piece *
     int i;
     switch (piece->pieceType) {
         case BRIDGE:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 3, 0);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 3, false);
             return;
         case BRIDGE_CROSSING:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 8, 3, 0);
-            fortressGenerator_generateChildLeft(fortressGenerator, piece, 3, 8, 0);
-            fortressGenerator_generateChildRight(fortressGenerator, piece, 3, 8, 0);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 8, 3, false);
+            fortressGenerator_generateChildLeft(fortressGenerator, piece, 3, 8, false);
+            fortressGenerator_generateChildRight(fortressGenerator, piece, 3, 8, false);
             return;
         case BRIDGE_SMALL_CROSSING:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 2, 0, 0);
-            fortressGenerator_generateChildLeft(fortressGenerator, piece, 0, 2, 0);
-            fortressGenerator_generateChildRight(fortressGenerator, piece, 0, 2, 0);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 2, 0, false);
+            fortressGenerator_generateChildLeft(fortressGenerator, piece, 0, 2, false);
+            fortressGenerator_generateChildRight(fortressGenerator, piece, 0, 2, false);
             return;
         case BRIDGE_STAIRS:
-            fortressGenerator_generateChildRight(fortressGenerator, piece, 6, 2, 0);
+            fortressGenerator_generateChildRight(fortressGenerator, piece, 6, 2, false);
             return;
         case BRIDGE_PLATFORM:
             //nop
             return;
         case CORRIDOR_EXIT:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 5, 3, 1);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 5, 3, true);
             return;
         case SMALL_CORRIDOR:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 0, 1);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 0, true);
             return;
         case CORRIDOR_RIGHT_TURN:
-            fortressGenerator_generateChildRight(fortressGenerator, piece, 0, 1, 1);
+            fortressGenerator_generateChildRight(fortressGenerator, piece, 0, 1, true);
             return;
         case CORRIDOR_LEFT_TURN:
-            fortressGenerator_generateChildLeft(fortressGenerator, piece, 0, 1, 1);
+            fortressGenerator_generateChildLeft(fortressGenerator, piece, 0, 1, true);
             return;
         case CORRIDOR_STAIRS:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 0, 1);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 0, true);
             return;
         case CORRIDOR_BALCONY:
             i = 1;
@@ -132,13 +156,13 @@ void fortressGenerator_placeJigsaw(FortressGenerator *fortressGenerator, Piece *
             fortressGenerator_generateChildRight(fortressGenerator, piece, 0, i, random_nextIntPow2(&(fortressGenerator->random), 8) > 0);
             return;
         case CORRIDOR_CROSSING:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 0, 1);
-            fortressGenerator_generateChildLeft(fortressGenerator, piece, 0, 1, 1);
-            fortressGenerator_generateChildRight(fortressGenerator, piece, 0, 1, 1);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 1, 0, true);
+            fortressGenerator_generateChildLeft(fortressGenerator, piece, 0, 1, true);
+            fortressGenerator_generateChildRight(fortressGenerator, piece, 0, 1, true);
             return;
         case CORRIDOR_NETHER_WARTS_ROOM:
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 5, 3, 1);
-            fortressGenerator_generateChildForward(fortressGenerator, piece, 5, 11, 1);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 5, 3, true);
+            fortressGenerator_generateChildForward(fortressGenerator, piece, 5, 11, true);
             return;
         case BRIDGE_END:
             return;
@@ -189,9 +213,10 @@ void fortressGenerator_generateAndAddPiece(FortressGenerator *fortressGenerator,
     //printf("fortressGenerator_generateAndAddPiece\n");
     if (abs(x - fortressGenerator->startX) <= 112 && abs(z - fortressGenerator->startZ) <= 112) {
         Piece *piece = fortressGenerator_generateRandomPiece(fortressGenerator, x, y, z, direction, length + 1, isCorridor);
-        if (piece != 0) {
+        if (piece != NULL) {
             fortressGenerator->piecesCount++;
             fortressGenerator->pendingChildren[fortressGenerator->pendingChildrenCount++] = piece;
+            // printf("Placing piece %s at /tp %i ~ %i\n", PIECE_TYPE_NAMES[piece->pieceType], piece->boundingBox.minX, piece->boundingBox.minZ);
         }
     } else {
         BlockBox blockBox;
@@ -334,8 +359,8 @@ Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, Pie
         case CORRIDOR_NETHER_WARTS_ROOM:
             blockBox_rotated(&(piece->boundingBox), x, y, z, -5, -3, 0, 13, 14, 13, direction);
             break;
-        case BRIDGE_END:
-            return 0;
+        default:
+            return NULL;
     }
 
     if (!fortressGenerator_isOkBox(fortressGenerator, &(piece->boundingBox))) {
@@ -347,7 +372,7 @@ Piece *fortressGenerator_generatePiece(FortressGenerator *fortressGenerator, Pie
     piece->length = length;
 
     if (pieceType == CORRIDOR_RIGHT_TURN || pieceType == CORRIDOR_LEFT_TURN) {
-        random_nextInt(&(fortressGenerator->random));
+        random_nextIntNotPow2(&(fortressGenerator->random), 3);
     }
 
     //printf("Generated piece %i", pieceType);

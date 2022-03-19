@@ -8,8 +8,6 @@
 #include "PieceData.h"
 #include "PieceType.h"
 
-#define FORTRESS_SPACING 27
-#define FORTRESS_SEPARATION 4
 #define FORTRESS_SALT 30084232
 
 typedef struct {
@@ -31,9 +29,11 @@ typedef struct {
     Random random;
 } FortressGenerator;
 
+int32_t fortressGenerator_getRegionSize(Version version);
+
 void fortressGenerator_generateForRegion(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t regionX, int32_t regionZ, int32_t salt, Version version);
 
-void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t chunkX, int32_t chunkZ);
+void fortressGenerator_generateForChunk(FortressGenerator *fortressGenerator, uint64_t structureSeed, int32_t chunkX, int32_t chunkZ, Version version);
 
 void fortressGenerator_placeJigsaw(FortressGenerator *fortressGenerator, Piece *piece);
 

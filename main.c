@@ -231,7 +231,7 @@ typedef struct {
     int searchCenterZ;
 } InputData;
 
-void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, int regionX, int regionZ) {
+void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, int32_t regionX, int32_t regionZ) {
     fortressGenerator_generateForRegion(fortressGenerator, inputData->structureSeed, regionX, regionZ, inputData->salt, inputData->version);
     if (fortressGenerator->piecesCount == 0) return;
 
@@ -272,8 +272,8 @@ void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, i
                     if (otherId == mainId) continue;
 
                     BlockBox *other = crossroads[otherId];
-                    int offsetX = other->minX - main->minX;
-                    int offsetZ = other->minZ - main->minZ;
+                    int32_t offsetX = other->minX - main->minX;
+                    int32_t offsetZ = other->minZ - main->minZ;
                     if ((offsetX % 19) != 0 || (offsetZ % 19) != 0) continue;
 
                     for (int offsetId = 0; offsetId < shapeVariants->offsetsCount; offsetId++) {
@@ -301,8 +301,10 @@ int getInputData(InputData *inputData) {
         return 0;
     }
 
-    if (!getIntNormal("fortress salt", &inputData->salt, 1, FORTRESS_SALT, INT_MIN, INT_MAX)) {
-        return 0;
+    if (inputData->version >= v1_16_1) {
+        if (!getIntNormal("fortress salt", &inputData->salt, 1, FORTRESS_SALT, INT_MIN, INT_MAX)) {
+            return 0;
+        }
     }
 
     if (!getIntEnum("crossroad shape", (int*)&inputData->crossroadShape, SHAPE_NAMES, SHAPE_COUNT)) {
@@ -334,9 +336,11 @@ int main() {
     if (getInputData(&inputData)) {
         FortressGenerator fortressGenerator;
 
-        int32_t regionRadius = inputData.searchRadius / FORTRESS_SPACING / 16 + 1;
-        int32_t regionCenterX = inputData.searchCenterX / FORTRESS_SPACING / 16;
-        int32_t regionCenterZ = inputData.searchCenterZ / FORTRESS_SPACING / 16;
+        int32_t regionSize = fortressGenerator_getRegionSize(inputData.version);
+
+        int32_t regionRadius = inputData.searchRadius / regionSize / 16 + 1;
+        int32_t regionCenterX = inputData.searchCenterX / regionSize / 16;
+        int32_t regionCenterZ = inputData.searchCenterZ / regionSize / 16;
 
         int32_t regionMinX = regionCenterX - regionRadius;
         int32_t regionMaxX = regionCenterX + regionRadius;
