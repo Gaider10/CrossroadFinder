@@ -7,7 +7,10 @@ int getInt(int *result, bool useDefault, int defaultValue, int min, int max) {
     char input[64];
     char *ptr;
 
-    fgets(input, 64, stdin);
+    if (fgets(input, 64, stdin) == NULL) {
+        printf("Error was encountered from fgets\n\n");
+        return 0;
+    }
 
     if (input[0] == '\n') {
         if (useDefault) {
@@ -74,7 +77,10 @@ long long getLong(long long *result) {
     char input[64];
     char *ptr;
     
-    fgets(input, 64, stdin);
+    if (fgets(input, 64, stdin) == NULL) {
+        printf("Error was encountered from fgets\n\n");
+        return 0;
+    }
 
     if (input[0] == '\n') {
         printf("Entered value is not valid\n");

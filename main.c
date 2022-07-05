@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <limits.h>
 
 #include "fortressgenerator/FortressGenerator.h"
 #include "util/Inputs.h"
@@ -264,16 +265,16 @@ void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, i
         BlockBox **crossroads = crossroadsByHeight[heightId];
 
         for (int mainId = 0; mainId < crossroadCount; mainId++) {
-            BlockBox *main = crossroads[mainId];
+            BlockBox *mainBox = crossroads[mainId];
             for (int shapeId = 0; shapeId < shapeVariants->shapesCount; shapeId++) {
                 Shape *shape = &(shapeVariants->shapes[shapeId]);
                 int good = 0;
                 for (int otherId = 0; otherId < crossroadCount; otherId++) {
                     if (otherId == mainId) continue;
 
-                    BlockBox *other = crossroads[otherId];
-                    int32_t offsetX = other->minX - main->minX;
-                    int32_t offsetZ = other->minZ - main->minZ;
+                    BlockBox *otherBox = crossroads[otherId];
+                    int32_t offsetX = otherBox->minX - mainBox->minX;
+                    int32_t offsetZ = otherBox->minZ - mainBox->minZ;
                     if ((offsetX % 19) != 0 || (offsetZ % 19) != 0) continue;
 
                     for (int offsetId = 0; offsetId < shapeVariants->offsetsCount; offsetId++) {
@@ -284,7 +285,7 @@ void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, i
                     }
                 }
                 if (good >= shapeVariants->offsetsCount) {
-                    printf("Found a good shape at /tp %i %i %i\n", main->minX, main->minY, main->minZ);
+                    printf("Found a good shape at /tp %i %i %i\n", mainBox->minX, mainBox->minY, mainBox->minZ);
                     return;
                 }
             }
@@ -354,7 +355,8 @@ int main() {
         }
     }
 
-    system("pause");
+    printf("Press enter to continue . . .\n");
+    getchar();
 
     return 0;
 }
