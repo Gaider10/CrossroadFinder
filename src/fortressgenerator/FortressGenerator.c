@@ -274,7 +274,7 @@ Piece *fortressGenerator_generateRandomPiece(FortressGenerator *fortressGenerato
                             if (pieceData != lastPieceData) {
                                 memmove(pieceData,
                                         pieceData + 1,
-                                        (unsigned long long)lastPieceData - (unsigned long long)pieceData);
+                                        (uintptr_t)lastPieceData - (uintptr_t)pieceData);
                                 //printf("Now it is %i\n", pieceData->pieceType);
                             }
                             (*pieceDataCount)--;
