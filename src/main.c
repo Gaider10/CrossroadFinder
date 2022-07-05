@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <inttypes.h>
 #include <limits.h>
+#include <time.h>
 
 #include "fortressgenerator/FortressGenerator.h"
 #include "util/Inputs.h"
@@ -29,8 +30,8 @@ const char *SHAPE_NAMES[] = {
 #define SHAPE_COUNT (sizeof(SHAPE_NAMES) / sizeof(SHAPE_NAMES[0]))
 
 typedef struct {
-    int x;
-    int z;
+    int32_t x;
+    int32_t z;
 } Offset;
 
 typedef struct {
@@ -223,13 +224,13 @@ ShapeVariants SHAPES[] = {
 
 typedef struct {
     Version version;
-    long long structureSeed;
-    int salt;
+    int64_t structureSeed;
+    int32_t salt;
     CrossroadShape crossroadShape;
-    int maxY;
-    int searchRadius;
-    int searchCenterX;
-    int searchCenterZ;
+    int32_t maxY;
+    int32_t searchRadius;
+    int32_t searchCenterX;
+    int32_t searchCenterZ;
 } InputData;
 
 void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, int32_t regionX, int32_t regionZ) {
@@ -293,17 +294,17 @@ void processRegion(InputData *inputData, FortressGenerator *fortressGenerator, i
     }
 }
 
-int getInputData(InputData *inputData) {
+bool getInputData(InputData *inputData) {
     if (!getIntEnum("closest lower version", (int*)&inputData->version, VERSION_NAMES, VERSION_COUNT)) {
         return 0;
     }
 
-    if (!getLongNormal("numeric world seed", &inputData->structureSeed)) {
+    if (!getI64Number("numeric world seed", &inputData->structureSeed, false, 0, INT64_MIN, INT64_MAX)) {
         return 0;
     }
 
     if (inputData->version >= v1_16_1) {
-        if (!getIntNormal("fortress salt", &inputData->salt, 1, FORTRESS_SALT, INT_MIN, INT_MAX)) {
+        if (!getI32Number("fortress salt", &inputData->salt, true, FORTRESS_SALT, INT32_MIN, INT32_MAX)) {
             return 0;
         }
     }
@@ -312,19 +313,19 @@ int getInputData(InputData *inputData) {
         return 0;
     }
 
-    if (!getIntNormal("maxY", &inputData->maxY, 1, 255, 48, INT_MAX)) {
+    if (!getI32Number("maxY", &inputData->maxY, true, 255, 48, INT32_MAX)) {
         return 0;
     }
     
-    if (!getIntNormal("search radius", &inputData->searchRadius, 0, 0, 0, 30000000)) {
+    if (!getI32Number("search radius", &inputData->searchRadius, false, 0, 0, 60000000)) {
         return 0;
     }
 
-    if (!getIntNormal("search center X", &inputData->searchCenterX, 1, 0, -30000000, 30000000)) {
+    if (!getI32Number("search center X", &inputData->searchCenterX, true, 0, -30000000, 30000000)) {
         return 0;
     }
     
-    if (!getIntNormal("search center Z", &inputData->searchCenterZ, 1, 0, -30000000, 30000000)) {
+    if (!getI32Number("search center Z", &inputData->searchCenterZ, true, 0, -30000000, 30000000)) {
         return 0;
     }
 

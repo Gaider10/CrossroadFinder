@@ -1,8 +1,9 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
-int getIntNormal(const char *name, int *result, bool useDefault, int defaultValue, int min, int max);
-int getIntEnum(const char *name, int *result, const char *const *elements, int count);
+bool getI32Number(const char *name, int32_t *out, bool hasDefault, int32_t defaultValue, int32_t min, int32_t max);
+bool getI64Number(const char *name, int64_t *out, bool hasDefault, int64_t defaultValue, int64_t min, int64_t max);
 
-long long getLongNormal(const char *name, long long *result);
+bool getIntEnum(const char *name, int *out, const char *const *elements, int elementCount);

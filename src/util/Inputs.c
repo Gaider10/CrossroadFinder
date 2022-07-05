@@ -2,8 +2,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
+#include <errno.h>
 
-int getInt(int *result, bool useDefault, int defaultValue, int min, int max) {
+bool getI64(const char *name, int64_t *out, bool hasDefault, int64_t defaultValue, int64_t min, int64_t max) {
     char input[64];
     char *ptr;
 
@@ -13,8 +15,8 @@ int getInt(int *result, bool useDefault, int defaultValue, int min, int max) {
     }
 
     if (input[0] == '\n') {
-        if (useDefault) {
-            *result = defaultValue;
+        if (hasDefault) {
+            *out = defaultValue;
             return 1;
         } else {
             printf("Entered value is not valid\n");
@@ -22,88 +24,77 @@ int getInt(int *result, bool useDefault, int defaultValue, int min, int max) {
         }
     }
 
-    *result = strtol(input, &ptr, 10);
-    if (*ptr != '\n') {
+    errno = 0;
+    int64_t value = (int64_t)strtoll(input, &ptr, 10);
+    if (*ptr != '\n' || errno == ERANGE) {
         printf("Entered value is not valid\n");
         return 0;
     }
 
-    if (*result < min) {
-        printf("Entered value can't be smaller than %i\n", min);
+    if (value < min) {
+        printf("Entered value can't be smaller than %" PRIi64 "\n", min);
         return 0;
     }
 
-    if (*result > max) {
-        printf("Entered value can't be bigger than %i\n", max);
+    if (value > max) {
+        printf("Entered value can't be bigger than %" PRIi64 "\n", max);
         return 0;
     }
 
+    *out = value;
     return 1;
 }
 
-int getIntNormal(const char *name, int *result, bool useDefault, int defaultValue, int min, int max) {
-    if (useDefault) {
-        printf("Enter %s (leave empty for %i):\n", name, defaultValue);
+bool getI32Number(const char *name, int32_t *out, bool hasDefault, int32_t defaultValue, int32_t min, int32_t max) {
+    if (hasDefault) {
+        printf("Enter %s (leave empty for %" PRIi32 "):\n", name, defaultValue);
     } else {
         printf("Enter %s:\n", name);
     }
 
-    if (!getInt(result, useDefault, defaultValue, min, max)) {
-        return 0;
+    int64_t value;
+    bool success = getI64(name, &value, hasDefault, (int64_t)defaultValue, (int64_t)min, (int64_t)max);
+
+    if (success) {
+        *out = (int32_t)value;
+        printf("Using %s %" PRIi32 "\n", name, (int32_t)value);
     }
 
-    printf("Using %s %i\n\n", name, *result);
-
-    return 1;
+    return success;
 }
 
-int getIntEnum(const char *name, int *result, const char *const *elements, int count) {
+bool getI64Number(const char *name, int64_t *out, bool hasDefault, int64_t defaultValue, int64_t min, int64_t max) {
+    if (hasDefault) {
+        printf("Enter %s (leave empty for %" PRIi64 "):\n", name, defaultValue);
+    } else {
+        printf("Enter %s:\n", name);
+    }
+
+    int64_t value;
+    bool success = getI64(name, &value, hasDefault, defaultValue, min, max);
+
+    if (success) {
+        *out = value;
+        printf("Using %s %" PRIi64 "\n", name, value);
+    }
+
+    return success;
+}
+
+bool getIntEnum(const char *name, int *out, const char *const *elements, int elementCount) {
     printf("Enter %s:\n", name);
 
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < elementCount; i++) {
         printf("%i - %s\n", i, elements[i]);
     }
 
-    if (!getInt(result, false, 0, 0, count - 1)) {
-        return 0;
+    int64_t value;
+    bool success = getI64(name, &value, false, (int64_t)0, (int64_t)0, (int64_t)(elementCount - 1));
+
+    if (success) {
+        *out = (int)value;
+        printf("Using %s %s\n", name, elements[value]);
     }
 
-    printf("Using %s %s\n\n", name, elements[*result]);
-
-    return 1;
-}
-
-long long getLong(long long *result) {
-    char input[64];
-    char *ptr;
-    
-    if (fgets(input, 64, stdin) == NULL) {
-        printf("Error was encountered from fgets\n\n");
-        return 0;
-    }
-
-    if (input[0] == '\n') {
-        printf("Entered value is not valid\n");
-        return 0;
-    }
-
-    *result = strtoll(input, &ptr, 10);
-    if (*ptr != '\n') {
-        printf("Entered value is not valid\n");
-        return 0;
-    }
-
-    return 1;
-}
-
-long long getLongNormal(const char *name, long long *result) {
-    printf("Enter %s\n", name);
-
-    if (!getLong(result)) {
-        return 0;
-    }
-
-    printf("Using %s %lli\n\n", name, *result);
-
-    return 1;
+    return success;
 }
